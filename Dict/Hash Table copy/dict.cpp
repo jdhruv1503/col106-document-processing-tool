@@ -87,22 +87,22 @@ Dict::~Dict(){
 }
 
 void Dict::insert_sentence(int book_code, int page, int paragraph, int sentence_no, string sentence) {
-    // split the sentence into words
-    int startIndex = 0, endIndex = 0;
-    for (int i = 0; i <= sentence.size(); i++) {
-        // If we reached the end of the word or the end of the input.
-        if (sentence[i] == ' ' || i == sentence.size()) {
-            endIndex = i;
-            string word;
-            word.append(sentence, startIndex, endIndex - startIndex);
+    string cw = "";
 
-            for (char &c : word) {
-                c = tolower(c);
-            }
-
-            hashTable->insertWord(word);
-            startIndex = endIndex + 1;
+    for (int i=0; i<sentence.size(); i++) {
+        if (isalnum(sentence[i])) {
+            cw.push_back(tolower(sentence[i]));
         }
+        else {
+            if (cw != "") {
+                hashTable->insertWord(cw);
+            }
+            cw = "";
+        }
+    }
+
+    if (cw != "") {
+        hashTable->insertWord(cw);
     }
 }
 

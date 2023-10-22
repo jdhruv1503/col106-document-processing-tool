@@ -7,7 +7,7 @@ mobydick = ""
 for i in inlist:
     mobydick += i + " "
 
-new_string = mobydick.translate(str.maketrans('', '', string.punctuation))
+new_string = mobydick.translate(str.maketrans(' ', ' ', string.punctuation))
 new_string2 = new_string.translate(str.maketrans('—', ' '))
 new_string = new_string2.translate(str.maketrans(';', ' '))
 new_string2 = new_string.translate(str.maketrans('"', ' '))
