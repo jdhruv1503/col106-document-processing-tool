@@ -1,18 +1,61 @@
-import subprocess
+import os
 import time
+import subprocess
+import shutil
 
-# Start time
+# List to store results
+results = []
+TIMES_EXEC = 220
 
+# Walk through all subdirectories
+for dirpath, dirnames, filenames in os.walk('.'):
+    for file in filenames:
+        # Check if file is a C++ file
+        if file.endswith('dict.cpp'):
+            # Full path to the file
+            filepath = os.path.join(dirpath, file)
+            # Name of the executable
+            exec_name = os.path.join(dirpath, 'exec')
+            shutil.copy('corpus.txt', dirpath)
+            
+            # Compile the C++ file
+            subprocess.run(['g++', filepath, '-o', exec_name])
+            
+            # Time the execution of the program
 
+# Warmup
 # Run the C++ program
-subprocess.run(["g++", "dict.cpp", "-o", "output"])
+subprocess.run(["g++", "Trie/dict.cpp", "-o", "output"])
 
-start_time = time.time()
-subprocess.run(["./output"])
+for _ in range(3200):
+    subprocess.run(['./output'])
+os.remove('./output')
 
-# End time
-end_time = time.time()
+print("Warmed up")
 
-# Calculate and print the execution time
-execution_time = end_time - start_time
-print(f"Execution time: {execution_time} seconds")
+for dirpath, dirnames, filenames in os.walk('.'):
+    for file in filenames:    
+        if file.endswith('exec'):
+            exec_name = os.path.join(dirpath, file)
+            start = time.time()
+            for _ in range(TIMES_EXEC):
+                subprocess.run([exec_name])
+            end = time.time()
+            
+            # Calculate the total execution time
+            exec_time = end - start
+            
+            # Store the result
+            results.append((dirpath, exec_time))
+            print("Executed ",dirpath)
+            
+            # Remove the executable
+            os.remove(exec_name)
+            os.remove(os.path.join(dirpath, 'corpus.txt'))
+
+
+os.remove('./output.txt')
+# Generate the text file
+with open('results - animal farm.txt', 'w') as f:
+    for dirpath, exec_time in results:
+        f.write(f'{dirpath}: {exec_time} seconds\n')

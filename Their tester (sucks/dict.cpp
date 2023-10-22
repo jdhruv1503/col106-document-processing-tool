@@ -1,117 +1,98 @@
 // Do NOT add any other includes
 #include "dict.h"
 
-HashTable::HashTable(int size) {
-    table_size = size;
-    num_entries = 0;
-    table.resize(table_size);
-}
-
-int HashTable::hashFunction(string word) {
-    // take ascii val after '0' and store as base-(122-48+1)=BASE75 number
-
-    int sum = 0;
-
-    for (int i=0; i<word.size(); i++) {
-        
-        sum = sum*73 + int(word[i]) - int('0');
-
-        sum = sum % table_size;
-
-    }
-
-    return sum;
-}
-
-void HashTable::handleCollision(int index, string word) {
-    for (Entry &entry : table[index]) {
-        if (entry.word == word) {
-            entry.count++;
-            return;
-        }
-    }
-    table[index].push_back({word, 1});
-    num_entries++;
-    if (num_entries > table_size / 2) {
-        resizeTable();
-    }
-}
-
-void HashTable::insertWord(string word) {
-    int index = hashFunction(word);
-    handleCollision(index, word);
-}
-
-int HashTable::getWordCount(string word) {
-    int index = hashFunction(word);
-    for (const Entry &entry : table[index]) {
-        if (entry.word == word) {
-            return entry.count;
-        }
-    }
-    return 0;
-}
-
-void HashTable::dumpDictionary(string filename) {
-    ofstream file;
-    file.open(filename);
-    for (const vector<Entry> &bucket : table) {
-        for (const Entry &entry : bucket) {
-            file << entry.word << ", " << entry.count << "\n";
-        }
-    }
-    file.close();
-}
-
-void HashTable::resizeTable() {
-    vector<vector<Entry>> old_table = table;
-    table_size *= 2;
-    num_entries = 0;
-    table.clear();
-    table.resize(table_size);
-    for (const vector<Entry> &bucket : old_table) {
-        for (const Entry &entry : bucket) {
-            for (int i = 0; i < entry.count; i++) {
-                insertWord(entry.word);
-            }
-        }
-    }
-}
-
 Dict::Dict(){
-    hashTable = new HashTable(109121);
+    root = new TrieNode();
 }
 
-Dict::~Dict(){
-    delete hashTable;
+void freeTrie(TrieNode* root) {
+    for (int i = 0; i < 36; i++)
+        if (root->children[i])
+            freeTrie(root->children[i]);
+    delete root;
+}
+
+Dict::~Dict() {
+    freeTrie(root);
+}
+
+
+int charToIndex(char c) {
+    if(c >= 'a' && c <= 'z') return c - 'a';
+    if(c >= '0' && c <= '9') return c - '0' + 26;
+}
+
+TrieNode *getNode() {
+    TrieNode *node = new TrieNode;
+
+    node->isEndOfWord = false;
+    node->wordCount = 0;
+
+    for (int i = 0; i < 36; i++)
+        node->children[i] = nullptr;
+
+    return node;
 }
 
 void Dict::insert_sentence(int book_code, int page, int paragraph, int sentence_no, string sentence) {
-    string cw = "";
-
-    for (int i=0; i<sentence.size(); i++) {
-        if (isalnum(sentence[i])) {
-            cw.push_back(tolower(sentence[i]));
-        }
-        else {
-            if (cw != "") {
-                hashTable->insertWord(cw);
+    string word;
+    TrieNode* pCrawl = root;
+    for (char c : sentence) {
+        if (isalnum(c)) {
+            c = tolower(c);
+            int index = charToIndex(c);
+            if (!pCrawl->children[index])
+                pCrawl->children[index] = getNode();
+            pCrawl = pCrawl->children[index];
+            word.push_back(c);
+        } else {
+            if (!word.empty()) {
+                pCrawl->isEndOfWord = true;
+                pCrawl->wordCount++;
+                word.clear();
+                pCrawl = root;
             }
-            cw = "";
         }
     }
-
-    if (cw != "") {
-        hashTable->insertWord(cw);
+    if (!word.empty()) {
+        pCrawl->isEndOfWord = true;
+        pCrawl->wordCount++;
     }
 }
 
 
-int Dict::get_word_count(string word){
-    return hashTable->getWordCount(word);
+
+
+int Dict::get_word_count(string word) {
+    TrieNode *pCrawl = root;
+    for (char c : word) {
+        c = tolower(c);
+        int index = charToIndex(c);
+        if (!pCrawl->children[index])
+            return 0;
+        pCrawl = pCrawl->children[index];
+    }
+    if (pCrawl != nullptr && pCrawl->isEndOfWord)
+        return pCrawl->wordCount;
+    return 0;
 }
 
-void Dict::dump_dictionary(string filename){
-    return hashTable->dumpDictionary(filename);
 
+
+void printTrie(TrieNode* root, string str, ofstream &file) {
+    if (root->isEndOfWord)
+        file << str << ", " << root->wordCount << "\n";
+    for (char c = 'a'; c <= 'z'; c++)
+        if (root->children[c - 'a'])
+            printTrie(root->children[c - 'a'], str + c, file);
+    for (char c = '0'; c <= '9'; c++)
+        if (root->children[c - '0' + 26])
+            printTrie(root->children[c - '0' + 26], str + c, file);
+}
+
+void Dict::dump_dictionary(string filename) {
+    ofstream file;
+    file.open(filename);
+    printTrie(root, "", file);
+    file.close();
 }

@@ -1,0 +1,5 @@
+1 - rolling poly hash fn (base 73 encoding)
+2 - simple additive hash
+3 - XOR hash
+4 - djb2 hash
+5 - FNV1a hash, ELIMINATED
