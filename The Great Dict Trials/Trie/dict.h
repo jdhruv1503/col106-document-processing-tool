@@ -7,6 +7,7 @@ using namespace std;
 
 struct TrieNode {
     TrieNode *children[36];
+    bool isEndOfWord;
     int wordCount;
 };
 

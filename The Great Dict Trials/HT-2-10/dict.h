@@ -5,15 +5,32 @@
 #include <fstream>
 using namespace std;
 
-struct TrieNode {
-    TrieNode *children[36];
-    int wordCount;
+struct Entry {
+    string word;
+    int count;
+};
+
+class HashTable {
+    vector<vector<Entry>> table;
+    int table_size;
+    int num_entries;
+
+    // other helper functions
+
+public:
+    HashTable(int size);
+    void resizeTable();
+    int hashFunction(string word);
+    void insertWord(string word);
+    int getWordCount(string word);
+    void dumpDictionary(string filename);
+    void handleCollision(int index, string word);
 };
 
 class Dict {
 private:
     // You can add attributes/helper functions here
-    TrieNode *root;
+    HashTable* hashTable;
 
 public: 
     /* Please do not touch the attributes and 

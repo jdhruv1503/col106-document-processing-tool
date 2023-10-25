@@ -2,126 +2,181 @@
 #include "dict.h"
 
 Dict::Dict(){
-    root = new TrieNode();
-}
 
-void freeTrie(TrieNode* root) {
-    for (int i = 0; i < 36; i++)
-        if (root->children[i])
-            freeTrie(root->children[i]);
-    delete root;
+    root = new TrieNode();
+
 }
 
 Dict::~Dict() {
-    freeTrie(root);
-}
+    // iteratively delete all trie nodes, using stack
 
+    vector<TrieNode*> nodeStk;
+    nodeStk.push_back(root);
 
-int charToIndex(char c) {
-    if(c >= 'a' && c <= 'z') return c - 'a';
-    if(c >= '0' && c <= '9') return c - '0' + 26;
-}
+    while (nodeStk.size() != 0) {
+        TrieNode* curr = nodeStk.back();
+        nodeStk.pop_back();
 
-TrieNode *getNode() {
-    TrieNode *node = new TrieNode;
+        for (int i=0; i < 36; i++) {
+            if (curr->children[i] != NULL) {
+                nodeStk.push_back(curr->children[i]);
+            }
+        }
 
-    node->isEndOfWord = false;
-    node->wordCount = 0;
-
-    for (int i = 0; i < 36; i++)
-        node->children[i] = nullptr;
-
-    return node;
+        delete curr;
+    }
 }
 
 void Dict::insert_sentence(int book_code, int page, int paragraph, int sentence_no, string sentence) {
+
     string word;
-    TrieNode* pCrawl = root;
-    for (char c : sentence) {
-        if (isalnum(c)) {
-            c = tolower(c);
-            int index = charToIndex(c);
-            if (!pCrawl->children[index])
-                pCrawl->children[index] = getNode();
-            pCrawl = pCrawl->children[index];
-            word.push_back(c);
-        } else {
+    TrieNode* currNode = root;
+
+    std::vector<TrieNode*> nodeStk;
+    nodeStk.push_back(currNode);
+
+    for (int i=0; i<sentence.size(); i++) {
+        
+        // find the appropriate trie index, simultaneously check if its alphanumeric
+
+        int charIndex = -1;
+
+        if (sentence[i] >= 'a' && sentence[i] <= 'z') {
+            charIndex = sentence[i] - 'a';
+        }
+        else if (sentence[i] >= 'A' && sentence[i] <= 'Z') {
+            charIndex = sentence[i] - 'A';
+        }
+        else if (sentence[i] >= '0' && sentence[i] <= '9') {
+            charIndex = sentence[i] - '0' + 26;
+        }
+
+        if (charIndex > -1) {
+
+            sentence[i] = tolower(sentence[i]);
+
+            if (!currNode->children[charIndex]) {
+
+                currNode->children[charIndex] = new TrieNode;
+                currNode->children[charIndex]->wordCount = 0;
+
+                // populate children (lol)
+
+                for (int i = 0; i < 36; i++)
+                    currNode->children[charIndex]->children[i] = nullptr;
+
+                nodeStk.push_back(currNode->children[charIndex]);
+
+            }
+
+            currNode = currNode->children[charIndex];
+            word.push_back(sentence[i]);
+
+        } 
+
+        else {
             if (!word.empty()) {
-                pCrawl->isEndOfWord = true;
-                pCrawl->wordCount++;
+
+                currNode->wordCount++;
                 word.clear();
-                pCrawl = root;
+                currNode = root;
+                nodeStk.push_back(currNode);
+
             }
         }
     }
+    
     if (!word.empty()) {
-        pCrawl->isEndOfWord = true;
-        pCrawl->wordCount++;
+
+        currNode->wordCount++;
+
     }
 }
-
-
 
 
 int Dict::get_word_count(string word) {
-    TrieNode *pCrawl = root;
-    for (char c : word) {
-        c = tolower(c);
-        int index = charToIndex(c);
-        if (!pCrawl->children[index])
+
+    TrieNode *currNode = root;
+
+    for (int i=0; i<word.size(); i++) {
+
+        // get appropriate index
+
+        int index = 0; // assuming the input will be alphanumeric only; plz don't give bad test cases
+
+        if(word[i] >= 'a' && word[i] <= 'z') {
+            index = word[i] - 'a';
+        }
+        else if(word[i] >= 'A' && word[i] <= 'Z') {
+            index = word[i] - 'A';
+        }
+        else if(word[i] >= '0' && word[i] <= '9') {
+            index = word[i] - '0' + 26;
+        }
+
+        // traverse to that index
+
+        if (currNode->children[index] == NULL) {
+            // it doesn't exist
             return 0;
-        pCrawl = pCrawl->children[index];
+        }
+        
+        currNode = currNode->children[index];
+
     }
-    if (pCrawl != nullptr && pCrawl->isEndOfWord)
-        return pCrawl->wordCount;
-    return 0;
+
+    if (currNode != NULL) {
+        return currNode->wordCount;
+    }
+    else {
+        return 0;
+    }
+    
 }
 
 
-
-void printTrie(TrieNode* root, string str, ofstream &file) {
-    if (root->isEndOfWord)
-        file << str << ", " << root->wordCount << "\n";
-    for (char c = 'a'; c <= 'z'; c++)
-        if (root->children[c - 'a'])
-            printTrie(root->children[c - 'a'], str + c, file);
-    for (char c = '0'; c <= '9'; c++)
-        if (root->children[c - '0' + 26])
-            printTrie(root->children[c - '0' + 26], str + c, file);
-}
 
 void Dict::dump_dictionary(string filename) {
-    ofstream file;
-    file.open(filename);
-    printTrie(root, "", file);
-    file.close();
-}
+    ofstream fileStream;
+    fileStream.open(filename);
 
+    std::vector<TrieNode*> nodeStk;
+    std::vector<string> wordStk;
 
-// ------------------ DEBUG ZONE, REMOVE FOR FINAL SUBMISSION -----------------------------
-#include <fstream>
-#include <string>
+    nodeStk.push_back(root);
+    wordStk.push_back("");
 
-std::string readFileIntoString(const std::string& path) {
-    std::ifstream input_file(path);
-    if (!input_file.is_open()) {
-        std::cerr << "Could not open the file - '" << path << "'" << std::endl;
-        exit(EXIT_FAILURE);
+    while (nodeStk.size() != 0) {
+
+        TrieNode* currNode = nodeStk.back();
+        nodeStk.pop_back();
+
+        string currWord = wordStk.back();
+        wordStk.pop_back();
+
+        if (currNode->wordCount != 0) {
+            fileStream << currWord << ", " << currNode->wordCount << "\n";
+        }
+            
+        for (int i = 0; i < 26; i++) {
+
+            if (currNode->children[i] != NULL) {
+
+                nodeStk.push_back(currNode->children[i]);
+                wordStk.push_back(currWord + char('a' + i));
+
+            }
+        }
+        for (int i = 26; i < 36; i++) {
+
+            if (currNode->children[i] != NULL) {
+
+                nodeStk.push_back(currNode->children[i]);
+                wordStk.push_back(currWord + char('0' + i));
+
+            }
+        }
     }
-    return std::string((std::istreambuf_iterator<char>(input_file)),
-                       std::istreambuf_iterator<char>());
-}
 
-int main() {
-    
-    Dict* mydick = new Dict();
-
-    string instirng = readFileIntoString("corpus.txt");
-
-    mydick->insert_sentence(0, 0, 0, 0, instirng);
-    mydick->dump_dictionary("output.txt");
-
-    delete mydick;
-    
-    return 0;
+    fileStream.close();
 }
