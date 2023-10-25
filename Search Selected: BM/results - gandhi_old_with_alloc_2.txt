@@ -1,0 +1,13 @@
+./BM-Vector-AllocHalf-100: 28.07387924194336 seconds
+./BM-Vector-AllocHalf-10: 28.450698614120483 seconds
+./BM-Vector-Push: 28.83602499961853 seconds
+./BM-Vector-AllocHalf-100000: 29.043536901474 seconds
+./BM-Vector-AllocHalf-1000: 29.13089370727539 seconds
+./BM-Vector-AllocHalf-1: 29.664817094802856 seconds
+./BM-Vector-AllocQuad-10000: 29.862371921539307 seconds
+./BM-Vector-AllocQuad-10: 30.154502391815186 seconds
+./BM-Vector-AllocHalf-10000: 30.450015544891357 seconds
+./BM-Vector-AllocQuad-1: 30.505236625671387 seconds
+./BM-Vector-AllocQuad-1000: 30.537461519241333 seconds
+./BM-Vector-AllocQuad-100000: 30.85854196548462 seconds
+./BM-Vector-AllocQuad-100: 30.93969964981079 seconds

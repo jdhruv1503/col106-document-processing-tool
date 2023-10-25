@@ -1,0 +1,6 @@
+./KMP-Vector-Push: 23.808403253555298 seconds
+./FiniteAutomaton-Vector-Push: 990.7731585502625 seconds
+./BM-Vector-Push: 18.26163363456726 seconds // Clear winner
+./RK-Vector-Push: 101.98611116409302 seconds
+./Z-Vector-Push: 42.836215019226074 seconds
+./Naive-Vector-Push: 19.3979012966156 seconds

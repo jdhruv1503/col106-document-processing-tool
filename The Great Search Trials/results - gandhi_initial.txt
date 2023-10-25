@@ -1,0 +1,6 @@
+./KMP-Vector-Push: 10.314404010772705 seconds // optimized LPs array build
+./FiniteAutomaton-Vector-Push: 45.498157024383545 seconds  // what the fuck? optimized now, lets see
+./BM-Vector-Push: 8.04099154472351 seconds // go brrrrrrrrrrrrrr
+./RK-Vector-Push: 39.13553261756897 seconds // optimize prime
+./Z-Vector-Push: 16.74458646774292 seconds // fuck this
+./Naive-Vector-Push: 8.228180885314941 seconds // why go brrrrrrrrr?
